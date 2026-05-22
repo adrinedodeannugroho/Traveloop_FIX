@@ -40,7 +40,8 @@ if (isset($_SESSION['admin_logged_in'])) {
         $foto_path = ""; 
 
         if (isset($_FILES['foto_file']) && $_FILES['foto_file']['error'] === UPLOAD_ERR_OK) {
-            $target_dir = "uploads/"; 
+            // PERBAIKAN: Mengarahkan folder uploads agar sejajar dengan root (bukan di dalam folder config)
+            $target_dir = "../uploads/"; 
             if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
             
             $file_name = time() . '_' . basename($_FILES["foto_file"]["name"]);
@@ -49,15 +50,18 @@ if (isset($_SESSION['admin_logged_in'])) {
             $allowed_types = ['jpg', 'jpeg', 'png', 'webp'];
             
             if (in_array($imageFileType, $allowed_types) && move_uploaded_file($_FILES["foto_file"]["tmp_name"], $target_file)) {
+                // Hilangkan "../" agar path di database tetap bersih saat dipanggil di front-end
                 $foto_path = "uploads/" . $file_name; 
             }
         }
 
-        $query = "INSERT INTO destinasi (name, category, vicinity, rating, description, foto_url, maps_url, kontak, tarif, history, tips) 
+        // PERBAIKAN: Mengubah nama kolom menjadi nama, kategori, alamat, deskripsi agar sesuai dengan database
+        $query = "INSERT INTO destinasi (nama, kategori, alamat, rating, deskripsi, foto_url, maps_url, kontak, tarif, history, tips) 
                   VALUES ('$nama', '$kategori', '$alamat', '$rating', '$deskripsi', '$foto_path', '$maps_url', '$kontak', '$tarif', '$history', '$tips')";
                   
         if(mysqli_query($koneksi, $query)) {
-            header("Location: admin/admin.php?status=success_tambah");
+            // PERBAIKAN PATH REDIRECT: Menggunakan ../ untuk keluar dari folder config
+            header("Location: ../admin/admin.php?status=success_tambah");
             exit();
         } else {
             echo "Gagal menyimpan data: " . mysqli_error($koneksi);
@@ -83,7 +87,7 @@ if (isset($_SESSION['admin_logged_in'])) {
         $foto_url  = mysqli_real_escape_string($koneksi, $_POST['foto_url_lama']); 
 
         if (isset($_FILES['foto_file']) && $_FILES['foto_file']['error'] === UPLOAD_ERR_OK) {
-            $target_dir = "uploads/"; 
+            $target_dir = "../uploads/"; 
             if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
             
             $file_name = time() . '_' . basename($_FILES["foto_file"]["name"]);
@@ -95,8 +99,9 @@ if (isset($_SESSION['admin_logged_in'])) {
             }
         }
 
+        // PERBAIKAN: Mengubah 'name=' menjadi 'nama='
         $query = "UPDATE destinasi SET 
-                    name='$nama', 
+                    nama='$nama', 
                     kategori='$kategori', 
                     alamat='$alamat', 
                     rating='$rating', 
@@ -110,7 +115,8 @@ if (isset($_SESSION['admin_logged_in'])) {
                   WHERE id='$id'";
         
         if(mysqli_query($koneksi, $query)) {
-            header("Location: admin/admin.php?status=success_edit");
+            // PERBAIKAN PATH REDIRECT
+            header("Location: ../admin/admin.php?status=success_edit");
             exit();
         } else {
             echo "Error: " . mysqli_error($koneksi);
@@ -123,7 +129,8 @@ if (isset($_SESSION['admin_logged_in'])) {
         
         $query = "DELETE FROM destinasi WHERE id='$id'";
         if(mysqli_query($koneksi, $query)) {
-            header("Location: admin/admin.php?status=success_hapus");
+            // PERBAIKAN PATH REDIRECT
+            header("Location: ../admin/admin.php?status=success_hapus");
             exit();
         } else {
             echo "Gagal menghapus data: " . mysqli_error($koneksi);
