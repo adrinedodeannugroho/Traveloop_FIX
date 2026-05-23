@@ -48,7 +48,7 @@ CREATE TABLE `destinasi` (
   `alamat` text NOT NULL,
   `rating` decimal(3,1) DEFAULT 0.0,
   `deskripsi` text NOT NULL,
-  `foto_url` varchar(255) DEFAULT NULL,
+  `foto_url` longtext DEFAULT NULL,
   `maps_url` varchar(255) DEFAULT NULL,
   `kontak` varchar(50) DEFAULT NULL,
   `tarif` varchar(100) DEFAULT NULL,

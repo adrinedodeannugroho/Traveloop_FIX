@@ -40,18 +40,16 @@ if (isset($_SESSION['admin_logged_in'])) {
         $foto_path = ""; 
 
         if (isset($_FILES['foto_file']) && $_FILES['foto_file']['error'] === UPLOAD_ERR_OK) {
-            // PERBAIKAN: Mengarahkan folder uploads agar sejajar dengan root (bukan di dalam folder config)
-            $target_dir = "../uploads/"; 
-            if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+            $tmp_name = $_FILES['foto_file']['tmp_name'];
+            $file_name = $_FILES['foto_file']['name'];
+            $imageFileType = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+            $allowed_exts = ['jpg', 'jpeg', 'png', 'webp'];
             
-            $file_name = time() . '_' . basename($_FILES["foto_file"]["name"]);
-            $target_file = $target_dir . $file_name;
-            $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-            $allowed_types = ['jpg', 'jpeg', 'png', 'webp'];
-            
-            if (in_array($imageFileType, $allowed_types) && move_uploaded_file($_FILES["foto_file"]["tmp_name"], $target_file)) {
-                // Hilangkan "../" agar path di database tetap bersih saat dipanggil di front-end
-                $foto_path = "uploads/" . $file_name; 
+            if (in_array($imageFileType, $allowed_exts)) {
+                $file_type = $_FILES['foto_file']['type'];
+                $image_data = file_get_contents($tmp_name);
+                $base64 = base64_encode($image_data);
+                $foto_path = mysqli_real_escape_string($koneksi, 'data:' . $file_type . ';base64,' . $base64);
             }
         }
 
@@ -87,15 +85,16 @@ if (isset($_SESSION['admin_logged_in'])) {
         $foto_url  = mysqli_real_escape_string($koneksi, $_POST['foto_url_lama']); 
 
         if (isset($_FILES['foto_file']) && $_FILES['foto_file']['error'] === UPLOAD_ERR_OK) {
-            $target_dir = "../uploads/"; 
-            if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+            $tmp_name = $_FILES['foto_file']['tmp_name'];
+            $file_name = $_FILES['foto_file']['name'];
+            $imageFileType = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+            $allowed_exts = ['jpg', 'jpeg', 'png', 'webp'];
             
-            $file_name = time() . '_' . basename($_FILES["foto_file"]["name"]);
-            $target_file = $target_dir . $file_name;
-            $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-            
-            if (in_array($imageFileType, ['jpg', 'jpeg', 'png', 'webp']) && move_uploaded_file($_FILES["foto_file"]["tmp_name"], $target_file)) {
-                $foto_url = "uploads/" . $file_name; 
+            if (in_array($imageFileType, $allowed_exts)) {
+                $file_type = $_FILES['foto_file']['type'];
+                $image_data = file_get_contents($tmp_name);
+                $base64 = base64_encode($image_data);
+                $foto_url = mysqli_real_escape_string($koneksi, 'data:' . $file_type . ';base64,' . $base64);
             }
         }
 

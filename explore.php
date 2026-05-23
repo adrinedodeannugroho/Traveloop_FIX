@@ -89,22 +89,22 @@ $total_results = $query_explore ? mysqli_num_rows($query_explore) : 0;
           <div class="cat-filter-list mt-2">
             <input type="hidden" name="cat" id="catInput" value="<?= htmlspecialchars($category) ?>">
             
-            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'all' ? 'active' : '' ?>" onclick="setCategory('all')">
+            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'all' ? 'active' : '' ?>" onclick="setCategory('all', this)">
               <i class="bi bi-grid-fill text-muted me-2"></i>Semua Kategori
             </button>
-            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'nature' ? 'active' : '' ?>" onclick="setCategory('nature')">
+            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'nature' ? 'active' : '' ?>" onclick="setCategory('nature', this)">
               <i class="bi bi-tree text-success me-2"></i>Alam & Hutan
             </button>
-            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'beach' ? 'active' : '' ?>" onclick="setCategory('beach')">
+            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'beach' ? 'active' : '' ?>" onclick="setCategory('beach', this)">
               <i class="bi bi-water text-info me-2"></i>Pantai & Laut
             </button>
-            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'mountain' ? 'active' : '' ?>" onclick="setCategory('mountain')">
+            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'mountain' ? 'active' : '' ?>" onclick="setCategory('mountain', this)">
               <i class="bi bi-snow2 text-secondary me-2"></i>Pegunungan
             </button>
-            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'cultural' ? 'active' : '' ?>" onclick="setCategory('cultural')">
+            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'cultural' ? 'active' : '' ?>" onclick="setCategory('cultural', this)">
               <i class="bi bi-building-fill text-warning me-2"></i>Seni & Budaya
             </button>
-            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'historical' ? 'active' : '' ?>" onclick="setCategory('historical')">
+            <button type="button" class="cat-filter-btn mb-1 <?= $category == 'historical' ? 'active' : '' ?>" onclick="setCategory('historical', this)">
               <i class="bi bi-bank2 text-danger me-2"></i>Situs Sejarah
             </button>
           </div>
@@ -331,11 +331,19 @@ $total_results = $query_explore ? mysqli_num_rows($query_explore) : 0;
   // ---------------------------------------------------------
   // LOGIKA FILTER UI
   // ---------------------------------------------------------
-  function setCategory(catName) {
+  function setCategory(catName, btnEl) {
       document.getElementById('catInput').value = catName;
       let btns = document.querySelectorAll('.cat-filter-btn:not(#gemFilterBtn)');
       btns.forEach(btn => btn.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+      
+      if (btnEl) {
+          btnEl.classList.add('active');
+      } else if (typeof event !== 'undefined' && event.currentTarget) {
+          event.currentTarget.classList.add('active');
+      }
+      
+      // Otomatis submit saat kategori diklik agar hasil langsung muncul
+      document.getElementById('filterPanel').submit();
   }
 
   function toggleGemUI() {
@@ -353,7 +361,18 @@ $total_results = $query_explore ? mysqli_num_rows($query_explore) : 0;
       icon.classList.toggle('text-primary');
       
       checkbox.checked = btn.classList.contains('active');
+      
+      // Otomatis submit saat hidden gem ditoggle
+      document.getElementById('filterPanel').submit();
   }
+  
+  // Fitur searching auto submit ketika menekan Enter
+  document.getElementById('filterSearch')?.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+          e.preventDefault(); // Hindari aksi default agar tidak dobel
+          document.getElementById('filterPanel').submit();
+      }
+  });
 
   // ---------------------------------------------------------
   // LOGIKA GRID / LIST VIEW
