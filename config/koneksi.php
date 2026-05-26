@@ -6,10 +6,10 @@ if (session_status() === PHP_SESSION_NONE) {
 // ==========================================
 // 1. KONEKSI DATABASE
 // ==========================================
-$host = "127.0.0.1";
+$host = "localhost";
 $user = "root";
 $pass = "";
-$db   = "db_traveloop_fix"; 
+$db = "db_traveloop_fix";
 
 $koneksi = mysqli_connect($host, $user, $pass, $db);
 
@@ -24,40 +24,43 @@ if (isset($_SESSION['admin_logged_in'])) {
 
     // --- LOGIKA TAMBAH DATA ---
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'tambah') {
-        $nama      = mysqli_real_escape_string($koneksi, $_POST['nama']);
-        $kategori  = mysqli_real_escape_string($koneksi, $_POST['kategori']);
-        $alamat    = mysqli_real_escape_string($koneksi, $_POST['alamat']);
-        $rating    = mysqli_real_escape_string($koneksi, $_POST['rating']);
-        $deskripsi = mysqli_real_escape_string($koneksi, $_POST['deskripsi']); 
-        
+        $nama = mysqli_real_escape_string($koneksi, $_POST['nama']);
+        $kategori = mysqli_real_escape_string($koneksi, $_POST['kategori']);
+        $alamat = mysqli_real_escape_string($koneksi, $_POST['alamat']);
+        $rating = mysqli_real_escape_string($koneksi, $_POST['rating']);
+        $deskripsi = mysqli_real_escape_string($koneksi, $_POST['deskripsi']);
+
         // Input Detail Baru
-        $maps_url  = mysqli_real_escape_string($koneksi, $_POST['maps_url']);
-        $kontak    = mysqli_real_escape_string($koneksi, $_POST['kontak']);
-        $tarif     = mysqli_real_escape_string($koneksi, $_POST['tarif']);
-        $history   = mysqli_real_escape_string($koneksi, $_POST['history']);
-        $tips      = mysqli_real_escape_string($koneksi, $_POST['tips']);
-        
-        $foto_path = ""; 
+        $maps_url = mysqli_real_escape_string($koneksi, $_POST['maps_url']);
+        $kontak = mysqli_real_escape_string($koneksi, $_POST['kontak']);
+        $tarif = mysqli_real_escape_string($koneksi, $_POST['tarif']);
+        $history = mysqli_real_escape_string($koneksi, $_POST['history']);
+        $tips = mysqli_real_escape_string($koneksi, $_POST['tips']);
+
+        $foto_path = "";
 
         if (isset($_FILES['foto_file']) && $_FILES['foto_file']['error'] === UPLOAD_ERR_OK) {
-            $tmp_name = $_FILES['foto_file']['tmp_name'];
-            $file_name = $_FILES['foto_file']['name'];
-            $imageFileType = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-            $allowed_exts = ['jpg', 'jpeg', 'png', 'webp'];
-            
-            if (in_array($imageFileType, $allowed_exts)) {
-                $file_type = $_FILES['foto_file']['type'];
-                $image_data = file_get_contents($tmp_name);
-                $base64 = base64_encode($image_data);
-                $foto_path = mysqli_real_escape_string($koneksi, 'data:' . $file_type . ';base64,' . $base64);
+            // PERBAIKAN: Mengarahkan folder uploads agar sejajar dengan root (bukan di dalam folder config)
+            $target_dir = "../uploads/";
+            if (!is_dir($target_dir))
+                mkdir($target_dir, 0777, true);
+
+            $file_name = time() . '_' . basename($_FILES["foto_file"]["name"]);
+            $target_file = $target_dir . $file_name;
+            $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+            $allowed_types = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if (in_array($imageFileType, $allowed_types) && move_uploaded_file($_FILES["foto_file"]["tmp_name"], $target_file)) {
+                // Hilangkan "../" agar path di database tetap bersih saat dipanggil di front-end
+                $foto_path = "uploads/" . $file_name;
             }
         }
 
         // PERBAIKAN: Mengubah nama kolom menjadi nama, kategori, alamat, deskripsi agar sesuai dengan database
         $query = "INSERT INTO destinasi (nama, kategori, alamat, rating, deskripsi, foto_url, maps_url, kontak, tarif, history, tips) 
                   VALUES ('$nama', '$kategori', '$alamat', '$rating', '$deskripsi', '$foto_path', '$maps_url', '$kontak', '$tarif', '$history', '$tips')";
-                  
-        if(mysqli_query($koneksi, $query)) {
+
+        if (mysqli_query($koneksi, $query)) {
             // PERBAIKAN PATH REDIRECT: Menggunakan ../ untuk keluar dari folder config
             header("Location: ../admin/admin.php?status=success_tambah");
             exit();
@@ -68,33 +71,33 @@ if (isset($_SESSION['admin_logged_in'])) {
 
     // --- LOGIKA EDIT DATA ---
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'edit') {
-        $id        = mysqli_real_escape_string($koneksi, $_POST['id']);
-        $nama      = mysqli_real_escape_string($koneksi, $_POST['nama']);
-        $kategori  = mysqli_real_escape_string($koneksi, $_POST['kategori']);
-        $alamat    = mysqli_real_escape_string($koneksi, $_POST['alamat']);
-        $rating    = mysqli_real_escape_string($koneksi, $_POST['rating']);
+        $id = mysqli_real_escape_string($koneksi, $_POST['id']);
+        $nama = mysqli_real_escape_string($koneksi, $_POST['nama']);
+        $kategori = mysqli_real_escape_string($koneksi, $_POST['kategori']);
+        $alamat = mysqli_real_escape_string($koneksi, $_POST['alamat']);
+        $rating = mysqli_real_escape_string($koneksi, $_POST['rating']);
         $deskripsi = mysqli_real_escape_string($koneksi, $_POST['deskripsi']);
-        
+
         // Input Detail Baru
-        $maps_url  = mysqli_real_escape_string($koneksi, $_POST['maps_url']);
-        $kontak    = mysqli_real_escape_string($koneksi, $_POST['kontak']);
-        $tarif     = mysqli_real_escape_string($koneksi, $_POST['tarif']);
-        $history   = mysqli_real_escape_string($koneksi, $_POST['history']);
-        $tips      = mysqli_real_escape_string($koneksi, $_POST['tips']);
-        
-        $foto_url  = mysqli_real_escape_string($koneksi, $_POST['foto_url_lama']); 
+        $maps_url = mysqli_real_escape_string($koneksi, $_POST['maps_url']);
+        $kontak = mysqli_real_escape_string($koneksi, $_POST['kontak']);
+        $tarif = mysqli_real_escape_string($koneksi, $_POST['tarif']);
+        $history = mysqli_real_escape_string($koneksi, $_POST['history']);
+        $tips = mysqli_real_escape_string($koneksi, $_POST['tips']);
+
+        $foto_url = mysqli_real_escape_string($koneksi, $_POST['foto_url_lama']);
 
         if (isset($_FILES['foto_file']) && $_FILES['foto_file']['error'] === UPLOAD_ERR_OK) {
-            $tmp_name = $_FILES['foto_file']['tmp_name'];
-            $file_name = $_FILES['foto_file']['name'];
-            $imageFileType = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-            $allowed_exts = ['jpg', 'jpeg', 'png', 'webp'];
-            
-            if (in_array($imageFileType, $allowed_exts)) {
-                $file_type = $_FILES['foto_file']['type'];
-                $image_data = file_get_contents($tmp_name);
-                $base64 = base64_encode($image_data);
-                $foto_url = mysqli_real_escape_string($koneksi, 'data:' . $file_type . ';base64,' . $base64);
+            $target_dir = "../uploads/";
+            if (!is_dir($target_dir))
+                mkdir($target_dir, 0777, true);
+
+            $file_name = time() . '_' . basename($_FILES["foto_file"]["name"]);
+            $target_file = $target_dir . $file_name;
+            $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+
+            if (in_array($imageFileType, ['jpg', 'jpeg', 'png', 'webp']) && move_uploaded_file($_FILES["foto_file"]["tmp_name"], $target_file)) {
+                $foto_url = "uploads/" . $file_name;
             }
         }
 
@@ -112,8 +115,8 @@ if (isset($_SESSION['admin_logged_in'])) {
                     history='$history',
                     tips='$tips' 
                   WHERE id='$id'";
-        
-        if(mysqli_query($koneksi, $query)) {
+
+        if (mysqli_query($koneksi, $query)) {
             // PERBAIKAN PATH REDIRECT
             header("Location: ../admin/admin.php?status=success_edit");
             exit();
@@ -125,9 +128,9 @@ if (isset($_SESSION['admin_logged_in'])) {
     // --- LOGIKA HAPUS DATA ---
     if (isset($_GET['action']) && $_GET['action'] == 'hapus' && isset($_GET['id'])) {
         $id = mysqli_real_escape_string($koneksi, $_GET['id']);
-        
+
         $query = "DELETE FROM destinasi WHERE id='$id'";
-        if(mysqli_query($koneksi, $query)) {
+        if (mysqli_query($koneksi, $query)) {
             // PERBAIKAN PATH REDIRECT
             header("Location: ../admin/admin.php?status=success_hapus");
             exit();

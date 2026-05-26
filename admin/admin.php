@@ -8,10 +8,29 @@ if (isset($_POST['login'])) {
     $email = mysqli_real_escape_string($koneksi, $_POST['email']);
     $password = $_POST['password'];
 
-    if ($email === 'admin@traveloop.com' && $password === 'admin123') {
-        $_SESSION['admin_logged_in'] = true;
-        header("Location: admin.php");
-        exit;
+    // Query untuk mengambil data admin berdasarkan email
+    $query_login = mysqli_query($koneksi, "SELECT * FROM admin WHERE email = '$email'");
+    
+    if ($query_login && mysqli_num_rows($query_login) > 0) {
+        $admin = mysqli_fetch_assoc($query_login);
+        
+        // Verifikasi password dengan password_verify
+        if (password_verify($password, $admin['password'])) {
+            // Login berhasil
+            $_SESSION['admin_logged_in'] = true;
+            $_SESSION['admin_id'] = $admin['id'];
+            $_SESSION['admin_nama'] = $admin['nama_lengkap'];
+            $_SESSION['admin_email'] = $admin['email'];
+            
+            // Update last_login
+            $admin_id = $admin['id'];
+            $update_login = mysqli_query($koneksi, "UPDATE admin SET last_login = NOW() WHERE id = '$admin_id'");
+            
+            header("Location: admin.php");
+            exit;
+        } else {
+            $login_error = "Email atau Password salah!";
+        }
     } else {
         $login_error = "Email atau Password salah!";
     }
@@ -148,9 +167,11 @@ if (isset($_SESSION['admin_logged_in'])) {
     </nav>
     <div class="p-3 border-top bg-light m-3 rounded-4 text-center">
       <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
-          <div class="bg-dark text-warning rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 35px; height:35px;">A</div>
+          <div class="bg-dark text-warning rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 35px; height:35px;">
+              <?= strtoupper(substr($_SESSION['admin_nama'] ?? 'A', 0, 1)) ?>
+          </div>
           <div class="text-start">
-              <p class="mb-0 fw-bold small text-dark">Administrator</p>
+              <p class="mb-0 fw-bold small text-dark"><?= $_SESSION['admin_nama'] ?? 'Administrator' ?></p>
               <p class="mb-0 text-success fw-bold" style="font-size: 11px;">● Online</p>
           </div>
       </div>

@@ -154,10 +154,18 @@ ALTER TABLE `ulasan`
 --
 
 --
+-- Dumping data for table `admin`
+-- Password: admin123 (hashed dengan password_hash)
+--
+
+INSERT INTO `admin` (`id`, `nama_lengkap`, `email`, `password`, `last_login`) VALUES
+(1, 'Administrator Traveloop', 'admin@traveloop.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL);
+
+--
 -- AUTO_INCREMENT for table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `destinasi`
