@@ -4,7 +4,7 @@
 include 'includes/header.php';
 ?>
 
-<section class="hero-section position-relative" id="hero">
+<section class="hero-section position-relative" id="hero" style="background-image: url('assets/image/Menu_Utama.png'); background-size: cover; background-position: center;">
   <div class="hero-overlay"></div>
   <div class="hero-particles" id="heroParticles"></div>
   <div class="container hero-content text-center" style="padding-top: 80px;">
