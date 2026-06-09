@@ -2,35 +2,45 @@
 // contact.php
 // 1. Memanggil koneksi database terlebih dahulu untuk memproses form
 require_once 'config/koneksi.php';
+require_once 'config/mailer.php';
 
-$alert_msg = '';
+$alert_msg   = '';
 $alert_class = 'd-none';
 
-// Logika pemrosesan form kontak saat disubmit (Metode POST) menggunakan pola PRG
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_pesan'])) {
-    // Pengamanan data dari SQL Injection
-    $nama  = mysqli_real_escape_string($koneksi, $_POST['nama']);
-    $email = mysqli_real_escape_string($koneksi, $_POST['email']);
-    $no_wa = mysqli_real_escape_string($koneksi, $_POST['no_wa']);
-    $topik = mysqli_real_escape_string($koneksi, $_POST['topik']);
-    $pesan = mysqli_real_escape_string($koneksi, $_POST['pesan']);
-    $tanggal = date('Y-m-d H:i:s');
+  $nama    = mysqli_real_escape_string($koneksi, trim($_POST['nama']));
+  $email   = mysqli_real_escape_string($koneksi, trim($_POST['email']));
+  $no_wa   = mysqli_real_escape_string($koneksi, trim($_POST['no_wa']));
+  $topik   = mysqli_real_escape_string($koneksi, trim($_POST['topik']));
+  $pesan   = mysqli_real_escape_string($koneksi, trim($_POST['pesan']));
+  $tanggal = date('Y-m-d H:i:s');
 
-    if (!empty($nama) && !empty($email) && !empty($pesan)) {
-        $query = "INSERT INTO pesan_kontak (nama, email, no_wa, topik, pesan, tanggal) VALUES ('$nama', '$email', '$no_wa', '$topik', '$pesan', '$tanggal')";
-        
-        if (mysqli_query($koneksi, $query)) {
-            // MENGHINDARI PESAN GANDA: Alihkan kembali ke halaman ini dengan status sukses
-            header("Location: contact.php?status=success");
-            exit;
-        } else {
-            $alert_class = 'alert alert-danger shadow-sm border-0 mb-4 rounded-3';
-            $alert_msg = '<i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Gagal!</strong> Terjadi kesalahan sistem. Error: ' . mysqli_error($koneksi);
-        }
+  if (!empty($nama) && !empty($email) && !empty($pesan)) {
+    $query = "INSERT INTO pesan_kontak (nama, email, no_wa, topik, pesan, tanggal)
+                  VALUES ('$nama', '$email', '$no_wa', '$topik', '$pesan', '$tanggal')";
+
+    if (mysqli_query($koneksi, $query)) {
+      // Kirim email notifikasi ke admin (tidak blok redirect jika gagal)
+      kirimEmailNotifikasi([
+        'nama'  => $nama,
+        'email' => $email,
+        'no_wa' => $no_wa,
+        'topik' => $topik,
+        'pesan' => $pesan,
+      ]);
+
+      header("Location: contact.php?status=success");
+      exit;
     } else {
-        $alert_class = 'alert alert-warning shadow-sm border-0 mb-4 rounded-3';
-        $alert_msg = '<i class="bi bi-info-circle-fill me-2"></i>Harap isi semua kolom yang bertanda wajib (*).';
+      $alert_class = 'alert alert-danger shadow-sm border-0 mb-4 rounded-3';
+      $alert_msg   = '<i class="bi bi-exclamation-triangle-fill me-2"></i>'
+        . '<strong>Gagal!</strong> Terjadi kesalahan sistem.';
     }
+  } else {
+    $alert_class = 'alert alert-warning shadow-sm border-0 mb-4 rounded-3';
+    $alert_msg   = '<i class="bi bi-info-circle-fill me-2"></i>'
+      . 'Harap isi semua kolom yang bertanda wajib (*).';
+  }
 }
 
 // 2. Memanggil Header global (berisi Navbar dan tag Head CSS)
@@ -60,10 +70,10 @@ require_once 'includes/header.php';
         <h2 class="section-title">Ada Pertanyaan atau Ide Kolaborasi?</h2>
         <p class="about-text mt-2 mb-4 text-muted">Kami sangat antusias untuk terhubung dengan wisatawan, pengelola wisata, dan pelaku bisnis lokal di area Barlingmascakeb. Sampaikan pesan Anda di bawah ini.</p>
 
-        <?php if(!empty($alert_msg)): ?>
-        <div id="contactAlert" class="<?= $alert_class ?>">
+        <?php if (!empty($alert_msg)): ?>
+          <div id="contactAlert" class="<?= $alert_class ?>">
             <?= $alert_msg ?>
-        </div>
+          </div>
         <?php endif; ?>
 
         <div class="contact-form-wrap bg-white p-4 p-md-5 rounded-4 shadow-sm border-0">
@@ -71,15 +81,15 @@ require_once 'includes/header.php';
             <div class="row g-4">
               <div class="col-md-6">
                 <label class="contact-label text-muted small fw-bold text-uppercase tracking-wider" for="nama">Nama Lengkap *</label>
-                <input type="text" id="nama" name="nama" class="form-control contact-input bg-light border-0 py-2" placeholder="Masukkan nama..." required/>
+                <input type="text" id="nama" name="nama" class="form-control contact-input bg-light border-0 py-2" placeholder="Masukkan nama..." required />
               </div>
               <div class="col-md-6">
                 <label class="contact-label text-muted small fw-bold text-uppercase tracking-wider" for="email">Alamat Email *</label>
-                <input type="email" id="email" name="email" class="form-control contact-input bg-light border-0 py-2" placeholder="email@domain.com" required/>
+                <input type="email" id="email" name="email" class="form-control contact-input bg-light border-0 py-2" placeholder="email@domain.com" required />
               </div>
               <div class="col-md-6">
                 <label class="contact-label text-muted small fw-bold text-uppercase tracking-wider" for="no_wa">No. WhatsApp</label>
-                <input type="text" id="no_wa" name="no_wa" class="form-control contact-input bg-light border-0 py-2" placeholder="08xx-xxxx-xxxx"/>
+                <input type="text" id="no_wa" name="no_wa" class="form-control contact-input bg-light border-0 py-2" placeholder="08xx-xxxx-xxxx" />
               </div>
               <div class="col-md-6">
                 <label class="contact-label text-muted small fw-bold text-uppercase tracking-wider" for="topik">Topik Pesan</label>
@@ -110,7 +120,7 @@ require_once 'includes/header.php';
         <div class="bg-white p-4 p-md-5 rounded-4 shadow-sm border-0 h-100">
           <p class="section-eyebrow">Info Kontak</p>
           <h2 class="section-title mb-4">Temukan Kami</h2>
-          
+
           <div class="contact-info-list mt-4">
             <div class="contact-info-item mb-4">
               <div class="contact-info-icon" style="--ci-color:#eab308"><i class="bi bi-geo-alt-fill"></i></div>
@@ -119,7 +129,7 @@ require_once 'includes/header.php';
                 <p class="contact-info-text small">Jl. HR. Bunyamin No. 993,<br>Purwokerto, Banyumas, Jawa Tengah 53122</p>
               </div>
             </div>
-            
+
             <div class="contact-info-item mb-4">
               <div class="contact-info-icon" style="--ci-color:#25d366"><i class="bi bi-whatsapp"></i></div>
               <div>
@@ -127,7 +137,7 @@ require_once 'includes/header.php';
                 <p class="contact-info-text small"><a href="https://wa.me/6285713228321" target="_blank" class="text-decoration-none">+62 857-1322-8321</a></p>
               </div>
             </div>
-            
+
             <div class="contact-info-item mb-4">
               <div class="contact-info-icon" style="--ci-color:#0ea5e9"><i class="bi bi-envelope-fill"></i></div>
               <div>
@@ -135,7 +145,7 @@ require_once 'includes/header.php';
                 <p class="contact-info-text small"><a href="mailto:withtraveloop@gmail.com" class="text-decoration-none">withtraveloop@gmail.com</a></p>
               </div>
             </div>
-            
+
             <div class="contact-info-item mb-4">
               <div class="contact-info-icon" style="--ci-color:#e88a22"><i class="bi bi-clock-fill"></i></div>
               <div>
@@ -155,15 +165,15 @@ require_once 'includes/header.php';
           </div>
 
           <div class="contact-map-wrap mt-4 shadow-sm rounded-4">
-              <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126604.5932599728!2d109.15570075!3d-7.4269135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e655c3136423d1d%3A0x4027a76e352e4a0!2sPurwokerto%2C%20Banyumas%20Regency%2C%20Central%20Java!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid" 
-                  width="100%" 
-                  height="220" 
-                  style="border:0;" 
-                  allowfullscreen="" 
-                  loading="lazy"
-                  referrerpolicy="no-referrer-when-downgrade">
-              </iframe>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126604.5932599728!2d109.15570075!3d-7.4269135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e655c3136423d1d%3A0x4027a76e352e4a0!2sPurwokerto%2C%20Banyumas%20Regency%2C%20Central%20Java!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid"
+              width="100%"
+              height="220"
+              style="border:0;"
+              allowfullscreen=""
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
           </div>
         </div>
       </div>
@@ -174,25 +184,25 @@ require_once 'includes/header.php';
 
 <script>
   window.addEventListener('DOMContentLoaded', () => {
-      // Pengecekan Navbar Scroll
-      if(typeof initNavScroll === 'function') {
-          initNavScroll();
-      }
+    // Pengecekan Navbar Scroll
+    if (typeof initNavScroll === 'function') {
+      initNavScroll();
+    }
 
-      // Menampilkan SweetAlert2 jika status pengiriman berhasil
-      <?php if(isset($_GET['status']) && $_GET['status'] == 'success'): ?>
+    // Menampilkan SweetAlert2 jika status pengiriman berhasil
+    <?php if (isset($_GET['status']) && $_GET['status'] == 'success'): ?>
       Swal.fire({
-          icon: 'success',
-          title: 'Pesan Berhasil Terkirim!',
-          text: 'Tim Traveloop akan segera merespons Anda dalam 1x24 Jam.',
-          showConfirmButton: false,
-          timer: 3500,
-          timerProgressBar: true
+        icon: 'success',
+        title: 'Pesan Berhasil Terkirim!',
+        text: 'Tim Traveloop akan segera merespons Anda dalam 1x24 Jam.',
+        showConfirmButton: false,
+        timer: 3500,
+        timerProgressBar: true
       });
-      
+
       // Membersihkan URL agar pesan tidak muncul lagi saat direfresh
       window.history.replaceState(null, null, window.location.pathname);
-      <?php endif; ?>
+    <?php endif; ?>
   });
 </script>
 
