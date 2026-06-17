@@ -74,6 +74,24 @@ $foto = !empty($row['foto_url']) ? $row['foto_url'] : 'https://placehold.co/1200
                 <a href="<?= !empty($row['maps_url']) ? $row['maps_url'] : '#' ?>" target="_blank" class="btn btn-gmaps w-100 mt-4 py-3 rounded-3">
                     <i class="bi bi-map me-2"></i>Petunjuk Arah (Maps)
                 </a>
+
+                <!-- Tombol Wishlist -->
+                <?php
+                $is_wishlisted = false;
+                if (isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true) {
+                    $uid = (int)$_SESSION['user_id'];
+                    $did = (int)$row['id'];
+                    $wcheck = mysqli_query($koneksi, "SELECT id FROM wishlist WHERE user_id = $uid AND destinasi_id = $did LIMIT 1");
+                    $is_wishlisted = ($wcheck && mysqli_num_rows($wcheck) > 0);
+                }
+                ?>
+                <button class="btn <?= $is_wishlisted ? 'btn-danger' : 'btn-outline-danger' ?> w-100 mt-3 py-3 rounded-3 fw-bold wishlist-btn-detail"
+                        id="detailWishlistBtn"
+                        onclick="toggleWishlist(<?= $row['id'] ?>, this)"
+                        data-id="<?= $row['id'] ?>">
+                    <i class="bi bi-heart<?= $is_wishlisted ? '-fill' : '' ?> me-2 wishlist-icon-animate"></i>
+                    <?= $is_wishlisted ? 'Tersimpan di Wishlist' : 'Tambah ke Wishlist' ?>
+                </button>
             </div>
         </div>
     </div>

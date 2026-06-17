@@ -15,6 +15,22 @@ if ($current_page == 'explore.php' || $current_page == 'detail.php') {
     $page_title = "Tentang Kami — Traveloop";
 } elseif ($current_page == 'contact.php') {
     $page_title = "Kontak & Kemitraan — Traveloop";
+} elseif ($current_page == 'wishlist.php') {
+    $page_title = "Wishlist Saya — Traveloop";
+}
+
+// 3. Cek status login user
+$is_user_logged_in = isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true;
+$user_nama = $is_user_logged_in ? ($_SESSION['user_nama'] ?? 'User') : '';
+
+// 4. Hitung jumlah wishlist jika sudah login
+$wishlist_count = 0;
+if ($is_user_logged_in) {
+    $uid = (int)$_SESSION['user_id'];
+    $wq = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM wishlist WHERE user_id = $uid");
+    if ($wq) {
+        $wishlist_count = (int)mysqli_fetch_assoc($wq)['total'];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -32,6 +48,18 @@ if ($current_page == 'explore.php' || $current_page == 'detail.php') {
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   
   <link rel="stylesheet" href="assets/css/style.css"/>
+
+  <!-- SweetAlert2 untuk notifikasi premium -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Global JS Variables -->
+  <script>
+    const TRAVELOOP_USER = {
+      isLoggedIn: <?= $is_user_logged_in ? 'true' : 'false' ?>,
+      userId: <?= $is_user_logged_in ? (int)$_SESSION['user_id'] : 'null' ?>,
+      nama: <?= $is_user_logged_in ? '"' . addslashes($user_nama) . '"' : 'null' ?>
+    };
+  </script>
 </head>
 <body>
 
@@ -66,10 +94,62 @@ if ($current_page == 'explore.php' || $current_page == 'detail.php') {
                 <i class="bi bi-envelope me-1"></i>Kemitraan
             </a>
         </li>
-        
-        <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
-          <a class="btn btn-warning px-4 text-dark fw-bold" style="border-radius: 8px;" href="explore.php">Mulai Eksplorasi</a>
+
+        <!-- Wishlist Link -->
+        <li class="nav-item">
+            <a class="nav-link position-relative <?= ($current_page == 'wishlist.php') ? 'active' : ''; ?>" href="wishlist.php">
+                <i class="bi bi-heart<?= ($current_page == 'wishlist.php') ? '-fill text-danger' : '' ?> me-1"></i>Wishlist
+                <?php if ($wishlist_count > 0): ?>
+                  <span class="badge bg-danger rounded-pill wishlist-badge-nav" id="navWishlistBadge"><?= $wishlist_count ?></span>
+                <?php else: ?>
+                  <span class="badge bg-danger rounded-pill wishlist-badge-nav d-none" id="navWishlistBadge">0</span>
+                <?php endif; ?>
+            </a>
         </li>
+        
+        <!-- User Auth Area -->
+        <?php if ($is_user_logged_in): ?>
+          <li class="nav-item dropdown ms-lg-3 mt-3 mt-lg-0">
+            <a class="btn btn-outline-warning px-3 text-dark fw-bold dropdown-toggle user-nav-btn" 
+               href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+               style="border-radius: 8px;">
+              <i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($user_nama) ?>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3 mt-2 user-dropdown">
+              <li>
+                <div class="dropdown-header px-3 py-2">
+                  <p class="mb-0 fw-bold text-dark"><?= htmlspecialchars($user_nama) ?></p>
+                  <p class="mb-0 small text-muted"><?= htmlspecialchars($_SESSION['user_email'] ?? '') ?></p>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item px-3 py-2" href="wishlist.php">
+                  <i class="bi bi-heart text-danger me-2"></i>Wishlist Saya
+                  <?php if ($wishlist_count > 0): ?>
+                    <span class="badge bg-danger rounded-pill float-end"><?= $wishlist_count ?></span>
+                  <?php endif; ?>
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item px-3 py-2 text-danger" href="auth/logout.php">
+                  <i class="bi bi-box-arrow-right me-2"></i>Keluar
+                </a>
+              </li>
+            </ul>
+          </li>
+        <?php else: ?>
+          <li class="nav-item ms-lg-3 mt-3 mt-lg-0 d-flex gap-2">
+            <a class="btn btn-outline-warning px-3 fw-bold" style="border-radius: 8px;" href="auth/login.php">
+              <i class="bi bi-box-arrow-in-right me-1"></i>Login
+            </a>
+            <a class="btn btn-warning px-3 text-dark fw-bold" style="border-radius: 8px;" href="auth/register.php">
+              <i class="bi bi-person-plus me-1"></i>Daftar
+            </a>
+          </li>
+        <?php endif; ?>
+
       </ul>
     </div>
   </div>

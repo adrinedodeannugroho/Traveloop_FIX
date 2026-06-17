@@ -26,6 +26,7 @@
           <li class="mb-2"><a href="index.php" class="text-decoration-none text-white-50 hover-white transition">Beranda</a></li>
           <li class="mb-2"><a href="explore.php" class="text-decoration-none text-white-50 hover-white transition">Eksplorasi Wisata</a></li>
           <li class="mb-2"><a href="about.php" class="text-decoration-none text-white-50 hover-white transition">Tentang Kami</a></li>
+          <li class="mb-2"><a href="wishlist.php" class="text-decoration-none text-white-50 hover-white transition"><i class="bi bi-heart-fill text-danger me-1"></i>Wishlist Saya</a></li>
           <li class="mb-2"><a href="#" class="text-decoration-none text-white-50 hover-white transition" onclick="bootstrap.Modal.getOrCreateInstance(document.getElementById('itineraryModal')).show(); return false;">Smart Itinerary</a></li>
         </ul>
       </div>

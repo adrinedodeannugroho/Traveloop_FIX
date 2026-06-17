@@ -83,29 +83,68 @@ function formatTarif(tarif) {
 }
 
 // ============================================================
-//  FITUR FAVORIT (Menyimpan ID ke LocalStorage)
+//  FITUR FAVORIT (AJAX KE DATABASE MYSQL)
 // ============================================================
-function getFavs() {
-    try { return JSON.parse(localStorage.getItem("tl_favs") || "[]"); } catch { return []; }
-}
-function isFav(id) {
-    return getFavs().includes(id.toString());
-}
-function toggleFav(id, btn) {
-    id = id.toString();
-    let favs = getFavs();
-    if (favs.includes(id)) {
-        favs = favs.filter((f) => f !== id);
-        btn.innerHTML = '<i class="bi bi-heart me-2"></i>Simpan Destinasi';
-        btn.classList.replace('btn-danger', 'btn-outline-secondary');
-        btn.classList.remove('text-white');
-    } else {
-        favs.push(id);
-        btn.innerHTML = '<i class="bi bi-heart-fill me-2"></i>Tersimpan';
-        btn.classList.replace('btn-outline-secondary', 'btn-danger');
-        btn.classList.add('text-white');
+
+async function toggleFav(id, btn) {
+    const destinasiId = parseInt(id);
+    const originalHtml = btn.innerHTML;
+
+    try {
+        // Tampilkan animasi loading saat memproses ke database
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memproses...';
+        btn.disabled = true;
+
+        // Pastikan URL file PHP pemroses sesuai dengan struktur foldermu
+        const response = await fetch('proses_wishlist.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ destinasi_id: destinasiId })
+        });
+
+        const result = await response.json();
+        btn.disabled = false;
+
+        if (result.status === 'added') {
+            btn.innerHTML = '<i class="bi bi-heart-fill me-2"></i>Tersimpan';
+            btn.classList.replace('btn-outline-secondary', 'btn-danger');
+            btn.classList.add('text-white');
+
+            // SINKRONISASI FRONTEND: Update status kartu asli di halaman agar tidak reset saat modal ditutup
+            const cardElements = document.querySelectorAll(`[data-id="${destinasiId}"]`);
+            cardElements.forEach(el => el.setAttribute('data-saved', 'true'));
+        } 
+        else if (result.status === 'removed') {
+            btn.innerHTML = '<i class="bi bi-heart me-2"></i>Simpan Destinasi';
+            btn.classList.replace('btn-danger', 'btn-outline-secondary');
+            btn.classList.remove('text-white');
+            
+            // SINKRONISASI FRONTEND: Hapus status dari kartu asli di halaman
+            const cardElements = document.querySelectorAll(`[data-id="${destinasiId}"]`);
+            cardElements.forEach(el => el.setAttribute('data-saved', 'false'));
+
+            // UX Pintar: Jika user "Un-favorite" saat berada di halaman wishlist, otomatis refresh halaman
+            if(window.location.pathname.toLowerCase().includes('wishlist.php')) {
+                setTimeout(() => window.location.reload(), 600);
+            }
+        } 
+        else if (result.status === 'error') {
+            alert(result.message);
+            btn.innerHTML = originalHtml; 
+            // Jika error karena belum login, arahkan ke halaman login
+            if(result.message.toLowerCase().includes('login')) {
+                window.location.href = 'auth/login.php'; 
+            }
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan pada server. Pastikan kamu sudah terhubung ke database.');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
     }
-    localStorage.setItem("tl_favs", JSON.stringify(favs));
 }
 
 // ============================================================
@@ -132,33 +171,46 @@ function openDetailBtn(btn) {
     const isHiddenGem = deskripsi && deskripsi.toLowerCase().includes('hidden gem');
     
     // =======================================================
-    // LOGIKA RENDER MAPS (MENCEGAH ERROR LAYAR HITAM)
+    // LOGIKA TOMBOL NAVIGASI & SIMPAN (UPDATE DATABASE)
     // =======================================================
-    let mapsIframe = '';
     
-    if (maps && maps.includes('<iframe')) {
-        mapsIframe = `<div class="w-100 h-100 rounded-4 overflow-hidden shadow-sm border border-light">${maps}</div>`;
-    } else if (maps && maps.includes('embed')) {
-        mapsIframe = `<div class="w-100 h-100 rounded-4 overflow-hidden shadow-sm border border-light">
-                        <iframe src="${maps}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-                      </div>`;
-    } else if (maps && maps.startsWith('http')) {
-        // Thumbnail Peta yang Bisa Diklik (PERBAIKAN FINAL DI SINI)
-        // Jadikan rute navigasi Google Maps sebagai link d-block agar seluruh area kotak bisa diklik.
-        mapsIframe = `
-        <a href="${maps}" target="_blank" class="d-block w-100 h-100 position-relative rounded-4 overflow-hidden border shadow-sm text-decoration-none">
-            <div class="position-absolute w-100 h-100" style="background-image: url('https://placehold.co/600x400/e2e8f0/94a3b8?text=🗺️+Klik+Untuk+Buka+Peta'); background-size: cover; background-position: center;"></div>
+    // Mengecek apakah sedang di halaman wishlist.php (jika ya, otomatis statusnya = tersimpan)
+    // Atau mengecek attribute data-saved="true" jika ada dari PHP atau hasil sinkronisasi JS
+    const isSaved = window.location.pathname.toLowerCase().includes('wishlist.php') || btn.getAttribute('data-saved') === 'true';
+    
+    const favBtnClass = isSaved ? 'btn-danger text-white' : 'btn-outline-secondary';
+    const favIcon = isSaved ? 'bi-heart-fill' : 'bi-heart';
+    const favText = isSaved ? 'Tersimpan' : 'Simpan Destinasi';
 
-            <div class="position-absolute w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.35);">
-                <i class="bi bi-geo-alt-fill text-danger display-3 mb-2" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));"></i>
-                <div class="btn btn-danger rounded-pill fw-bold shadow-lg"><i class="bi bi-cursor-fill me-2"></i>Mulai Navigasi Arah</div>
-            </div>
-        </a>`;
+    let mapsAction = '';
+    
+    // 2. Ekstrak URL Peta (antisipasi jika data berisi iframe dari DB)
+    let mapUrl = maps;
+    if (maps && maps.includes('src="')) {
+        const match = maps.match(/src="([^"]+)"/);
+        if(match) mapUrl = match[1];
+    }
+
+    // 3. Render Tombol Aksi (Tanpa view gambar map)
+    if (mapUrl && mapUrl.startsWith('http')) {
+        mapsAction = `
+        <div class="d-flex flex-column gap-3 w-100">
+            <a href="${mapUrl}" target="_blank" class="btn btn-danger rounded-pill fw-bold shadow-sm py-2">
+                <i class="bi bi-cursor-fill me-2"></i>Mulai Navigasi Arah
+            </a>
+            <button type="button" class="btn ${favBtnClass} rounded-pill fw-bold shadow-sm py-2" onclick="toggleFav('${id}', this)">
+                <i class="bi ${favIcon} me-2"></i>${favText}
+            </button>
+        </div>`;
     } else {
-        mapsIframe = `
-        <div class="h-100 d-flex flex-column align-items-center justify-content-center bg-light rounded-4 p-5 text-center border shadow-sm" style="min-height: 250px;">
-            <i class="bi bi-map-fill display-4 d-block mb-3 opacity-25 text-muted"></i>
-            <span class="fs-6 fw-bold text-muted">Link Peta Belum Diisi di Database</span>
+        mapsAction = `
+        <div class="d-flex flex-column gap-3 w-100">
+            <button type="button" class="btn btn-secondary rounded-pill fw-bold shadow-sm py-2" disabled>
+                <i class="bi bi-map me-2"></i>Link Peta Belum Tersedia
+            </button>
+            <button type="button" class="btn ${favBtnClass} rounded-pill fw-bold shadow-sm py-2" onclick="toggleFav('${id}', this)">
+                <i class="bi ${favIcon} me-2"></i>${favText}
+            </button>
         </div>`;
     }
 
@@ -222,8 +274,8 @@ function openDetailBtn(btn) {
             </div>
           </div>
 
-          <div class="w-100" style="height: 250px;">
-              ${mapsIframe}
+          <div class="w-100 mt-2">
+              ${mapsAction}
           </div>
         </div>
 
