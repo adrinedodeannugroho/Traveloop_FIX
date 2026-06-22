@@ -212,123 +212,6 @@ $total_results = $query_explore ? mysqli_num_rows($query_explore) : 0;
 
 <script>
   // ---------------------------------------------------------
-  // LOGIKA RENDER UI MODAL DETAIL (SAAS STYLE)
-  // ---------------------------------------------------------
-  function openDetailBtn(el) {
-      // 1. Ambil data dari atribut HTML
-      const nama = el.getAttribute('data-nama');
-      const kategori = el.getAttribute('data-kategori');
-      const alamat = el.getAttribute('data-alamat');
-      const rating = el.getAttribute('data-rating') || '0.0';
-      const deskripsi = el.getAttribute('data-deskripsi') || 'Belum ada deskripsi untuk tempat ini.';
-      const foto = el.getAttribute('data-foto');
-      const maps = el.getAttribute('data-maps');
-      const tarif = el.getAttribute('data-tarif') || 'Gratis / Sesuai Kebijakan';
-      const history = el.getAttribute('data-history') || 'Belum ada informasi sejarah.';
-      const tips = el.getAttribute('data-tips') || 'Belum ada tips berkunjung.';
-      const kontak = el.getAttribute('data-kontak') || 'Tidak tersedia';
-
-      // 2. Format iFrame Google Maps agar proporsional dan tidak rusak
-      let mapHtml = '';
-      if(maps && maps.includes('<iframe')) {
-          mapHtml = `<div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm border">${maps}</div>`;
-      } else if (maps && maps.startsWith('http')) {
-          // Jika link biasa, paksa masukkan ke iframe (Note: beberapa link web biasa mungkin menolak iframe, namun untuk Google Maps Embed URL ini aman)
-          mapHtml = `<div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm border"><iframe src="${maps}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe></div>`;
-      } else {
-          mapHtml = `
-          <div class="bg-light rounded-4 p-5 text-center text-muted border">
-              <i class="bi bi-map-fill fs-1 d-block mb-2 opacity-25"></i>
-              <span class="small fw-bold">Peta belum tersedia</span>
-          </div>`;
-      }
-
-      // 3. Render HTML super rapi ke dalam kerangka #modalBody (yang ada di footer.php)
-      const modalBody = document.getElementById('modalBody');
-      modalBody.innerHTML = `
-          <div class="position-relative">
-              <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4 z-3 shadow" data-bs-dismiss="modal" aria-label="Close" style="background-color: rgba(0,0,0,0.5); padding: 0.8rem; border-radius: 50%;"></button>
-              
-              <div class="w-100 position-relative rounded-top-4 overflow-hidden" style="height: 380px;">
-                  <img src="${foto}" class="w-100 h-100 object-fit-cover" alt="${nama}">
-                  <div class="position-absolute bottom-0 start-0 w-100 p-4 p-lg-5" style="background: linear-gradient(to top, rgba(15,23,42,0.95), transparent);">
-                      <span class="badge bg-warning text-dark fw-bold mb-2 px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-geo-alt-fill me-1"></i>${kategori}</span>
-                      <h1 class="text-white fw-bold mb-2 display-5">${nama}</h1>
-                      <p class="text-light mb-0 opacity-75 fs-6"><i class="bi bi-pin-map-fill text-danger me-2"></i>${alamat}</p>
-                  </div>
-              </div>
-          </div>
-          
-          <div class="modal-body p-4 p-lg-5 bg-light rounded-bottom-4">
-              <div class="row g-4 g-lg-5">
-                  
-                  <div class="col-lg-7 col-xl-8">
-                      <div class="bg-white p-4 p-lg-5 rounded-4 shadow-sm border-0 mb-4">
-                          <h5 class="fw-bold text-dark border-bottom pb-3 mb-4"><i class="bi bi-info-circle-fill text-primary me-2"></i>Tentang Destinasi</h5>
-                          <p class="text-muted mb-0" style="line-height: 1.8; text-align: justify;">${deskripsi}</p>
-                      </div>
-                      
-                      <div class="bg-white p-4 p-lg-5 rounded-4 shadow-sm border-0 mb-4">
-                          <h5 class="fw-bold text-dark border-bottom pb-3 mb-4"><i class="bi bi-clock-history text-warning me-2"></i>Sejarah & Cerita Lokal</h5>
-                          <p class="text-muted mb-0" style="line-height: 1.8; text-align: justify;">${history}</p>
-                      </div>
-                      
-                      <div class="bg-white p-4 p-lg-5 rounded-4 shadow-sm border-0">
-                          <h5 class="fw-bold text-dark border-bottom pb-3 mb-4"><i class="bi bi-lightbulb-fill text-success me-2"></i>Tips Berkunjung</h5>
-                          <p class="text-muted mb-0" style="line-height: 1.8; text-align: justify;">${tips}</p>
-                      </div>
-                  </div>
-                  
-                  <div class="col-lg-5 col-xl-4">
-                      <div class="bg-white p-4 rounded-4 shadow-sm border-0 mb-4">
-                          <h5 class="fw-bold text-dark mb-4">Informasi Penting</h5>
-                          
-                          <div class="d-flex align-items-center mb-4">
-                              <div class="bg-warning bg-opacity-10 p-3 rounded-3 me-3 text-warning">
-                                  <i class="bi bi-star-fill fs-4"></i>
-                              </div>
-                              <div>
-                                  <p class="text-muted small mb-0 fw-bold text-uppercase tracking-wider">Rating</p>
-                                  <h5 class="fw-bold mb-0 text-dark">${rating} <span class="text-muted fs-6 fw-normal">/ 5.0</span></h5>
-                              </div>
-                          </div>
-                          
-                          <div class="d-flex align-items-center mb-4">
-                              <div class="bg-success bg-opacity-10 p-3 rounded-3 me-3 text-success">
-                                  <i class="bi bi-ticket-perforated-fill fs-4"></i>
-                              </div>
-                              <div>
-                                  <p class="text-muted small mb-0 fw-bold text-uppercase tracking-wider">Tiket Masuk</p>
-                                  <h6 class="fw-bold mb-0 text-dark">${tarif}</h6>
-                              </div>
-                          </div>
-                          
-                          <div class="d-flex align-items-center">
-                              <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3 text-primary">
-                                  <i class="bi bi-telephone-fill fs-4"></i>
-                              </div>
-                              <div>
-                                  <p class="text-muted small mb-0 fw-bold text-uppercase tracking-wider">Kontak Pengelola</p>
-                                  <h6 class="fw-bold mb-0 text-dark">${kontak}</h6>
-                              </div>
-                          </div>
-                      </div>
-                      
-                      <div class="bg-white p-3 rounded-4 shadow-sm border-0">
-                          <h6 class="fw-bold text-dark mb-3 px-2 pt-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Peta Lokasi</h6>
-                          ${mapHtml}
-                      </div>
-                  </div>
-              </div>
-          </div>
-      `;
-
-      // 4. Buka Modal menggunakan Bootstrap 5 JS API
-      const myModal = new bootstrap.Modal(document.getElementById('detailModal'));
-      myModal.show();
-  }
-
-  // ---------------------------------------------------------
   // LOGIKA FILTER UI
   // ---------------------------------------------------------
   function setCategory(catName, btnEl) {
@@ -342,7 +225,6 @@ $total_results = $query_explore ? mysqli_num_rows($query_explore) : 0;
           event.currentTarget.classList.add('active');
       }
       
-      // Otomatis submit saat kategori diklik agar hasil langsung muncul
       document.getElementById('filterPanel').submit();
   }
 
@@ -361,15 +243,12 @@ $total_results = $query_explore ? mysqli_num_rows($query_explore) : 0;
       icon.classList.toggle('text-primary');
       
       checkbox.checked = btn.classList.contains('active');
-      
-      // Otomatis submit saat hidden gem ditoggle
       document.getElementById('filterPanel').submit();
   }
   
-  // Fitur searching auto submit ketika menekan Enter
   document.getElementById('filterSearch')?.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
-          e.preventDefault(); // Hindari aksi default agar tidak dobel
+          e.preventDefault();
           document.getElementById('filterPanel').submit();
       }
   });
@@ -403,66 +282,6 @@ $total_results = $query_explore ? mysqli_num_rows($query_explore) : 0;
           cols.forEach(el => el.className = 'col-12 col-md-6 col-xl-4 place-item-col');
       }
   }
-
-  // ---------------------------------------------------------
-  // LOGIKA ITINERARY SEDERHANA
-  // ---------------------------------------------------------
-  function showItineraryModal() {
-      const myModal = new bootstrap.Modal(document.getElementById('itineraryModal'));
-      myModal.show();
-  }
-
-  function generateMockItinerary(tema) {
-      const body = document.getElementById('itineraryModalBody');
-      body.innerHTML = `
-          <div class="text-center py-4">
-            <div class="spinner-border text-primary mb-3" role="status"></div>
-            <h5 class="fw-bold">Menyusun Rencana Perjalanan...</h5>
-            <p class="text-muted">AI Traveloop sedang meracik rute ${tema} terbaik untuk Anda.</p>
-          </div>
-      `;
-
-      setTimeout(() => {
-          body.innerHTML = `
-          <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-            <div>
-              <h5 class="fw-bold text-dark mb-1">Paket Liburan ${tema}</h5>
-              <span class="badge bg-light text-dark border"><i class="bi bi-clock me-1"></i>Estimasi 8 Jam</span>
-            </div>
-            <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()">Pilih Ulang</button>
-          </div>
-          
-          <div class="position-relative border-start border-2 border-warning ms-3 ps-4 pb-2">
-             <div class="position-absolute bg-warning rounded-circle" style="width: 14px; height: 14px; left: -8px; top: 0;"></div>
-             <p class="text-muted small fw-bold mb-1">08:00 WIB</p>
-             <h6 class="fw-bold">Memulai Petualangan</h6>
-             <p class="text-muted small">Tiba di destinasi ${tema} pertama saat udara masih segar.</p>
-          </div>
-          
-          <div class="position-relative border-start border-2 border-warning ms-3 ps-4 pb-2">
-             <div class="position-absolute bg-danger rounded-circle" style="width: 14px; height: 14px; left: -8px; top: 0;"></div>
-             <p class="text-muted small fw-bold mb-1">12:30 WIB</p>
-             <h6 class="fw-bold">Istirahat & Kuliner Lokal</h6>
-             <p class="text-muted small">Menikmati sajian khas Banyumas di restoran sekitar lokasi wisata.</p>
-          </div>
-
-          <div class="position-relative ms-3 ps-4 pb-2">
-             <div class="position-absolute bg-primary rounded-circle" style="width: 14px; height: 14px; left: -6px; top: 0;"></div>
-             <p class="text-muted small fw-bold mb-1">15:00 WIB</p>
-             <h6 class="fw-bold">Destinasi ${tema} Kedua</h6>
-             <p class="text-muted small">Mengunjungi destinasi tambahan sebelum matahari terbenam.</p>
-          </div>
-          
-          <div class="alert alert-info mt-4 border-0 shadow-sm">
-             <i class="bi bi-info-circle-fill me-2"></i> Fitur penyusunan Itinerary yang dapat dikustomisasi secara interaktif dengan AI sedang dalam tahap pengembangan!
-          </div>
-          `;
-      }, 1500);
-  }
-
-  window.addEventListener('DOMContentLoaded', () => {
-    if(typeof initNavScroll === 'function') initNavScroll();
-  });
 </script>
 
 <?php

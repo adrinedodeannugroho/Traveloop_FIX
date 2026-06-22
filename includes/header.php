@@ -17,6 +17,8 @@ if ($current_page == 'explore.php' || $current_page == 'detail.php') {
     $page_title = "Kontak & Kemitraan — Traveloop";
 } elseif ($current_page == 'wishlist.php') {
     $page_title = "Wishlist Saya — Traveloop";
+} elseif ($current_page == 'itinerary_saya.php') {
+    $page_title = "Itinerary Saya — Traveloop";
 }
 
 // 3. Cek status login user
@@ -37,7 +39,7 @@ if ($is_user_logged_in) {
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no"/>
   <title><?= $page_title ?></title>
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
@@ -49,10 +51,8 @@ if ($is_user_logged_in) {
   
   <link rel="stylesheet" href="assets/css/style.css"/>
 
-  <!-- SweetAlert2 untuk notifikasi premium -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Global JS Variables -->
   <script>
     const TRAVELOOP_USER = {
       isLoggedIn: <?= $is_user_logged_in ? 'true' : 'false' ?>,
@@ -95,7 +95,7 @@ if ($is_user_logged_in) {
             </a>
         </li>
 
-        <!-- Wishlist Link -->
+        <?php if ($is_user_logged_in): ?>
         <li class="nav-item">
             <a class="nav-link position-relative <?= ($current_page == 'wishlist.php') ? 'active' : ''; ?>" href="wishlist.php">
                 <i class="bi bi-heart<?= ($current_page == 'wishlist.php') ? '-fill text-danger' : '' ?> me-1"></i>Wishlist
@@ -107,7 +107,13 @@ if ($is_user_logged_in) {
             </a>
         </li>
         
-        <!-- User Auth Area -->
+        <li class="nav-item">
+            <a class="nav-link <?= ($current_page == 'itinerary_saya.php') ? 'active' : ''; ?>" href="itinerary_saya.php">
+                <i class="bi bi-map<?= ($current_page == 'itinerary_saya.php') ? '-fill text-warning' : '' ?> me-1"></i>Itinerary Saya
+            </a>
+        </li>
+        <?php endif; ?>
+        
         <?php if ($is_user_logged_in): ?>
           <li class="nav-item dropdown ms-lg-3 mt-3 mt-lg-0">
             <a class="btn btn-outline-warning px-3 text-dark fw-bold dropdown-toggle user-nav-btn" 
@@ -129,6 +135,11 @@ if ($is_user_logged_in) {
                   <?php if ($wishlist_count > 0): ?>
                     <span class="badge bg-danger rounded-pill float-end"><?= $wishlist_count ?></span>
                   <?php endif; ?>
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item px-3 py-2 fw-bold" href="itinerary_saya.php">
+                  <i class="bi bi-map text-warning me-2"></i>Itinerary Saya
                 </a>
               </li>
               <li><hr class="dropdown-divider"></li>

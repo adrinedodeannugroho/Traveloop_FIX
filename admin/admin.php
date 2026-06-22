@@ -451,9 +451,9 @@ if (isset($_SESSION['admin_logged_in'])) {
                       <input type="text" name="kontak" id="formKontak" class="form-control" placeholder="No WhatsApp / IG"/>
                     </div>
                     <div class="col-12 mt-4">
-                      <label class="form-label small fw-bold text-muted">Unggah Foto Sampul</label>
+                      <label class="form-label small fw-bold text-muted">Unggah Foto Sampul <span class="text-danger">(Maks. 1MB)</span></label>
                       <input type="file" name="foto_file" id="formFotoFile" class="form-control" accept="image/png, image/jpeg, image/webp"/>
-                      <div id="fotoHelp" class="form-text" style="font-size: 11px;">Kosongkan jika tidak ingin mengubah foto saat Mode Edit.</div>
+                      <div id="fotoHelp" class="form-text text-danger" style="font-size: 11px;">Kosongkan jika tidak ingin mengubah foto saat Mode Edit. Disarankan gunakan format <b>WebP</b> agar optimal di InfinityFree.</div>
                     </div>
                 </div>
              </div>

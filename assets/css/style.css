@@ -35,7 +35,13 @@ body {
   overflow-x: hidden;
 }
 a { text-decoration: none; color: inherit; }
-img { max-width: 100%; display: block; }
+
+/* [PEMBARUAN: Responsivitas Gambar Universal] */
+img { 
+  max-width: 100%; 
+  height: auto; 
+  display: block; 
+}
 
 /* Utility Classes Tambahan */
 .hover-white:hover { color: #ffffff !important; opacity: 1 !important; }
@@ -231,6 +237,9 @@ img { max-width: 100%; display: block; }
 
 /* ── Place Cards ─────────────────────────────────────────────── */
 .place-card {
+  /* [PEMBARUAN] Mencegah lebar card statis pada ukuran layar ponsel */
+  width: 100% !important; 
+  max-width: 100%;
   background: var(--surface);
   border-radius: var(--radius-card);
   border: 1px solid var(--border);
