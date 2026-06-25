@@ -4,7 +4,10 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+// Ganti dengan load manual 3 file inti PHPMailer:
+require_once __DIR__ . '/PHPMailer/src/Exception.php';
+require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/PHPMailer/src/SMTP.php';
 
 /**
  * Kirim email notifikasi ke admin saat ada pesan kontak masuk.

@@ -78,10 +78,10 @@ $total_wishlist = $query_wishlist ? mysqli_num_rows($query_wishlist) : 0;
                  onclick="openDetailBtn(this)" 
                  style="cursor:pointer;">
                  
-              <div class="place-card-img-wrap position-relative" style="height: 220px;">
-                <img src="<?= $foto ?>" class="w-100 h-100 object-fit-cover" alt="<?= htmlspecialchars($row['nama']) ?>" loading="lazy"/>
+<div class="place-card-img-wrap position-relative w-100" style="height: 220px; width: 100%;">
+                <img src="<?= $foto ?>" class="w-100 h-100 object-fit-cover d-block" style="min-width: 100%; width: 100% !important; height: 100% !important; object-fit: cover; max-width: none;" alt="<?= htmlspecialchars($row['nama']) ?>" loading="lazy"/>
                 
-                <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 40%);"></div>
+                <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 40%); pointer-events: none;"></div>
 
                 <span class="position-absolute top-0 start-0 m-3 shadow-sm bg-white text-dark px-3 py-1 rounded-pill fw-bold small" style="font-size: 0.75rem;">
                   <i class="bi bi-geo-alt-fill text-warning me-1"></i><?= htmlspecialchars($row['kategori']) ?>

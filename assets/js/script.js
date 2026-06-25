@@ -217,16 +217,25 @@ function generateMockItinerary(tema) {
                 if(res.status === 'success' && res.data.length > 0) {
                     let places = res.data;
                     let kotaPencarian = res.kota_utama || 'Purwokerto';
-                    
-                    // SIMPAN KE VARIABEL GLOBAL UNTUK FUNGSI "SIMPAN KE AKUN SAYA" NANTI
-                    currentItineraryData = {
-                        tema: tema,
-                        kota_utama: kotaPencarian,
-                        destinasi_ids: places.map(p => p.id)
-                    };
-                    
+
+                    // 1. Ambil Tanggal Besok Secara Dinamis (Format: DD-MM-YYYY)
+                    const hariIni = new Date();
+                    const besok = new Date(hariIni);
+                    besok.setDate(hariIni.getDate() + 1);
+
+                    const dd = String(besok.getDate()).padStart(2, '0');
+                    const mm = String(besok.getMonth() + 1).padStart(2, '0');
+                    const yyyy = besok.getFullYear();
+                    const tanggalFormat = `${dd}-${mm}-${yyyy}`;
+
+                    // 2. Link Agoda tetap dinamis menggunakan nama kota asli
                     let linkAfiliasiHotel = `https://www.agoda.com/id-id/search?city=${kotaPencarian}&cid=1891463`; 
-                    let linkAfiliasiTransport = `https://www.traveloka.com/id-id/car-rental/city=${kotaPencarian}`; 
+
+                    // 3. Tarik seluruh pencarian Sewa Mobil ke Regional Hub Utama (Purwokerto) untuk mencegah 404
+                    let linkAfiliasiTransport = `https://www.traveloka.com/id-id/car-rental/search?slug=purwokerto&pickupDate=${tanggalFormat}&pickupTime=08:00&returnDate=${tanggalFormat}&returnTime=18:00`;
+                    
+                    // 4. Keterangan dinamis pada UI agar user tidak bingung
+                    let ketTransport = (kotaPencarian.toLowerCase().trim() === 'purwokerto') ? `Area ${kotaPencarian} & Sekitarnya` : 'Hub Regional Barlingmascakeb';
                     
                     let html = `<div id="pdf-content" class="p-2 bg-white rounded"><div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"><div><h5 class="fw-bold text-dark mb-1">Paket Liburan ${tema}</h5><span class="badge bg-light text-dark border"><i class="bi bi-clock me-1"></i>Estimasi 8 Jam</span><span class="badge bg-light text-dark border"><i class="bi bi-geo-alt me-1"></i>${places.length} Destinasi</span></div><div class="no-print"><img src="assets/Image/Menu_Utama.png" alt="Traveloop" style="height: 30px;" onerror="this.style.display='none'"></div></div><div class="itin-timeline">`;
 
@@ -245,7 +254,7 @@ function generateMockItinerary(tema) {
                         html += `<div class="position-relative ${borderClass} ms-3 ps-4 pb-4"><div class="position-absolute bg-${slot.color} rounded-circle border border-white border-2" style="width: 16px; height: 16px; left: -9px; top: 0;"></div><p class="text-${slot.color} small fw-bold mb-1"><i class="bi bi-clock me-1"></i>${slot.time}</p><h6 class="fw-bold mb-2">${slot.title}</h6><div class="card border-0 shadow-sm bg-light rounded-4 overflow-hidden mt-2 position-relative"><div class="d-flex align-items-center p-2"><img src="${place.foto_url}" class="rounded-3 object-fit-cover" style="width: 70px; height: 70px;" alt="${place.nama}" crossorigin="anonymous"><div class="ms-3 pe-2"><h6 class="fw-bold text-dark mb-0 text-truncate" style="max-width: 180px;">${place.nama}</h6><p class="text-muted small mb-1 text-truncate" style="max-width: 180px;">${place.alamat}</p><span class="badge bg-white text-dark border" style="font-size:0.7rem;"><i class="bi bi-ticket-perforated text-success me-1"></i>${tarif}</span></div></div></div></div>`;
                     });
 
-                    html += `</div><div class="mt-4 pt-4 border-top"><div class="d-flex justify-content-between align-items-center mb-3"><h6 class="fw-bold text-dark mb-0"><i class="bi bi-bag-check-fill text-primary me-2"></i>Lengkapi Perjalananmu</h6><span class="badge bg-light text-muted border">Partner Resmi</span></div><div class="row g-2"><div class="col-6"><a href="${linkAfiliasiHotel}" target="_blank" class="text-decoration-none"><div class="card bg-primary bg-opacity-10 border-0 h-100 rounded-4 p-3 transition hover-zoom text-center"><i class="bi bi-buildings-fill fs-3 text-primary mb-1"></i><span class="fw-bold text-dark small d-block mb-1">Cari Hotel</span><span class="text-muted" style="font-size: 0.7rem;">Diskon s/d 30% di ${kotaPencarian}</span></div></a></div><div class="col-6"><a href="${linkAfiliasiTransport}" target="_blank" class="text-decoration-none"><div class="card bg-success bg-opacity-10 border-0 h-100 rounded-4 p-3 transition hover-zoom text-center"><i class="bi bi-car-front-fill fs-3 text-success mb-1"></i><span class="fw-bold text-dark small d-block mb-1">Sewa Mobil</span><span class="text-muted" style="font-size: 0.7rem;">Area ${kotaPencarian} & Sekitarnya</span></div></a></div></div></div></div><div class="d-flex flex-wrap gap-2 mt-4 pt-3 border-top no-print"><button class="btn btn-outline-secondary rounded-pill fw-bold flex-grow-1 py-2" onclick="generateMockItinerary('${tema}')"><i class="bi bi-arrow-clockwise me-1"></i>Acak Rute</button><button class="btn btn-danger rounded-pill fw-bold flex-grow-1 py-2" onclick="downloadPDF('${tema}', event)"><i class="bi bi-file-earmark-pdf-fill me-1"></i>Cetak PDF</button><button class="btn btn-primary rounded-pill fw-bold w-100 py-2 mt-1 shadow-sm" id="btnSimpanItinerary" onclick="simpanItinerary(this)"><i class="bi bi-cloud-arrow-up-fill me-1"></i>Simpan ke Akun Saya</button></div>`;
+                    html += `</div><div class="mt-4 pt-4 border-top"><div class="d-flex justify-content-between align-items-center mb-3"><h6 class="fw-bold text-dark mb-0"><i class="bi bi-bag-check-fill text-primary me-2"></i>Lengkapi Perjalananmu</h6><span class="badge bg-light text-muted border">Partner Resmi</span></div><div class="row g-2"><div class="col-6"><a href="${linkAfiliasiHotel}" target="_blank" class="text-decoration-none"><div class="card bg-primary bg-opacity-10 border-0 h-100 rounded-4 p-3 transition hover-zoom text-center"><i class="bi bi-buildings-fill fs-3 text-primary mb-1"></i><span class="fw-bold text-dark small d-block mb-1">Cari Hotel</span><span class="text-muted" style="font-size: 0.7rem;">Diskon s/d 30% di ${kotaPencarian}</span></div></a></div><div class="col-6"><a href="${linkAfiliasiTransport}" target="_blank" class="text-decoration-none"><div class="card bg-success bg-opacity-10 border-0 h-100 rounded-4 p-3 transition hover-zoom text-center"><i class="bi bi-car-front-fill fs-3 text-success mb-1"></i><span class="fw-bold text-dark small d-block mb-1">Sewa Mobil</span><span class="text-muted" style="font-size: 0.7rem;">${ketTransport}</span></div></a></div></div></div></div><div class="d-flex flex-wrap gap-2 mt-4 pt-3 border-top no-print"><button class="btn btn-outline-secondary rounded-pill fw-bold flex-grow-1 py-2" onclick="generateMockItinerary('${tema}')"><i class="bi bi-arrow-clockwise me-1"></i>Acak Rute</button><button class="btn btn-danger rounded-pill fw-bold flex-grow-1 py-2" onclick="downloadPDF('${tema}', event)"><i class="bi bi-file-earmark-pdf-fill me-1"></i>Cetak PDF</button><button class="btn btn-primary rounded-pill fw-bold w-100 py-2 mt-1 shadow-sm" id="btnSimpanItinerary" onclick="simpanItinerary(this)"><i class="bi bi-cloud-arrow-up-fill me-1"></i>Simpan ke Akun Saya</button></div>`;
                     
                     body.innerHTML = html;
                 } else {
